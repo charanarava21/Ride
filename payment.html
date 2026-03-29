@@ -202,7 +202,7 @@ if (rideParam) {
 // ── Payment Handler ───────────────────────────────────────
 window.handlePayment = async function () {
     try {
-        const res = await fetch("http://localhost:5000/create-order", {
+        const res = await fetch("https://ride-1-qzpn.onrender.com/create-order", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
