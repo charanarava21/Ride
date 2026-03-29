@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login & Register - RIDEX</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Firebase v8 -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<style>
+/* ✅ YOUR ORIGINAL DESIGN UNCHANGED */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+:root {
+--bg-dark: #0a0a0c;
+--card-bg: #151518;
+--brand-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+--accent: #8b5cf6;
+}
+
+body {
+background-color: var(--bg-dark);
+color: white;
+font-family: 'Inter', sans-serif;
+margin: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+overflow: hidden;
+}
+
+.auth-card {
+background: var(--card-bg);
+border: 1px solid rgba(255, 255, 255, 0.08);
+border-radius: 32px;
+padding: 3rem;
+width: 100%;
+max-width: 450px;
+box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+position: relative;
+}
+
+.tab-switcher {
+display: flex;
+background: rgba(255, 255, 255, 0.03);
+padding: 4px;
+border-radius: 14px;
+margin-bottom: 2rem;
+position: relative;
+}
+
+.tab-btn {
+flex: 1;
+padding: 10px;
+text-align: center;
+font-weight: 600;
+font-size: 0.9rem;
+cursor: pointer;
+z-index: 1;
+transition: color 0.3s;
+color: #6b7280;
+}
+
+.tab-btn.active { color: white; }
+
+.tab-slider {
+position: absolute;
+height: calc(100% - 8px);
+width: calc(50% - 4px);
+background: rgba(255, 255, 255, 0.07);
+border-radius: 10px;
+transition: all 0.3s;
+}
+
+.input-box {
+background: rgba(255, 255, 255, 0.02);
+border: 1px solid rgba(255, 255, 255, 0.07);
+border-radius: 18px;
+padding: 0.8rem 1.25rem;
+transition: all 0.3s ease;
+margin-bottom: 1.25rem;
+}
+
+input {
+background: transparent;
+border: none;
+color: white;
+outline: none;
+width: 100%;
+font-size: 1rem;
+}
+
+.btn-auth {
+background: var(--brand-gradient);
+transition: 0.3s;
+}
+
+.btn-auth:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+}
+
+.form-container { display: none; }
+.form-container.active { display: block; }
+
+.social-btn {
+background: rgba(255,255,255,0.05);
+border:1px solid rgba(255,255,255,0.1);
+padding:12px;
+border-radius:18px;
+width:100%;
+margin-bottom:12px;
+transition:0.3s;
+}
+
+.social-btn:hover{
+background:rgba(255,255,255,0.1);
+}
+</style>
+</head>
+
+<body>
+
+<div class="auth-card">
+
+<div class="text-center mb-8">
+<div class="w-12 h-12 bg-violet-600 rounded-2xl flex items-center justify-center font-bold text-white mx-auto mb-4 text-2xl">R</div>
+<h1 class="text-2xl font-extrabold tracking-tight">Welcome to RIDEX</h1>
+<p class="text-gray-500 text-sm mt-1">Join the community of explorers</p>
+</div>
+
+<div class="tab-switcher">
+<div id="slider" class="tab-slider"></div>
+<div class="tab-btn active" onclick="switchTab('login')">Login</div>
+<div class="tab-btn" onclick="switchTab('register')">Register</div>
+</div>
+
+<!-- LOGIN -->
+<form id="loginForm" class="form-container active">
+    
+<div class="input-box">
+<label>Email</label>
+<input type="email" id="loginEmail" required>
+</div>
+
+<div class="input-box">
+<label>Password</label>
+<input type="password" id="loginPassword" required>
+</div>
+
+<button type="submit" class="btn-auth w-full py-4 rounded-2xl font-bold">
+Sign In
+</button>
+
+<div class="my-4 text-center text-gray-500 text-sm">OR</div>
+
+<button type="button" onclick="googleLogin()" class="social-btn">
+<i class="fa-brands fa-google mr-2 text-red-400"></i>
+Continue with Google
+</button>
+
+<button type="button" onclick="facebookLogin()" class="social-btn">
+<i class="fa-brands fa-facebook mr-2 text-blue-500"></i>
+Continue with Facebook
+</button>
+</form>
+
+<!-- REGISTER -->
+<form id="registerForm" class="form-container">
+
+<div class="input-box">
+<label>Full Name</label>
+<input type="text" id="regName" required>
+</div>
+
+<div class="input-box">
+<label>Email</label>
+<input type="email" id="regEmail" required>
+</div>
+
+<div class="input-box">
+<label>Password</label>
+<input type="password" id="regPassword" required>
+</div>
+
+<button type="submit" class="btn-auth w-full py-4 rounded-2xl font-bold">
+Create Account
+</button>
+
+<div class="my-4 text-center text-gray-500 text-sm">OR</div>
+
+<div class="flex gap-4">
+<button type="button" onclick="googleLogin()" 
+class="social-btn flex items-center justify-center">
+<i class="fa-brands fa-google text-red-400 text-lg"></i>
+</button>
+
+<button type="button" onclick="facebookLogin()" 
+class="social-btn flex items-center justify-center">
+<i class="fa-brands fa-facebook text-blue-500 text-lg"></i>
+</button>
+</div>
+
+</form>
+
+</div>
+
+<script>
+function switchTab(tab){
+const slider=document.getElementById('slider');
+const btns=document.querySelectorAll('.tab-btn');
+const loginForm=document.getElementById('loginForm');
+const registerForm=document.getElementById('registerForm');
+
+if(tab==='login'){
+slider.style.transform='translateX(0%)';
+btns[0].classList.add('active');
+btns[1].classList.remove('active');
+loginForm.classList.add('active');
+registerForm.classList.remove('active');
+}else{
+slider.style.transform='translateX(100%)';
+btns[1].classList.add('active');
+btns[0].classList.remove('active');
+registerForm.classList.add('active');
+loginForm.classList.remove('active');
+}
+}
+
+const firebaseConfig = {
+apiKey:"AIzaSyCd_ydWcFyr8sEmnzF9hQPobLkFMXkeyso",
+authDomain:"ridex-74948.firebaseapp.com",
+projectId:"ridex-74948",
+storageBucket:"ridex-74948.firebasestorage.app",
+messagingSenderId:"722829487082",
+appId:"1:722829487082:web:c80538bcd04601fc3d2093"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+/* LOGIN */
+loginForm.addEventListener("submit",function(e){
+e.preventDefault();
+auth.signInWithEmailAndPassword(loginEmail.value,loginPassword.value)
+.then(()=>window.location.href="profile.html")
+.catch(err=>alert(err.message));
+});
+
+/* REGISTER */
+registerForm.addEventListener("submit",function(e){
+e.preventDefault();
+auth.createUserWithEmailAndPassword(regEmail.value,regPassword.value)
+.then(user=>{
+return db.collection("users").doc(user.user.uid).set({
+name:regName.value,
+email:regEmail.value,
+verified:false
+});
+})
+.then(()=>{
+alert("Registration successful! Please login.");
+switchTab('login');
+})
+.catch(err=>alert(err.message));
+});
+
+/* GOOGLE LOGIN */
+function googleLogin(){
+const provider=new firebase.auth.GoogleAuthProvider();
+auth.signInWithPopup(provider).then(result=>{
+const user=result.user;
+db.collection("users").doc(user.uid).set({
+name:user.displayName,
+email:user.email,
+verified:false
+},{merge:true});
+window.location.href="profile.html";
+}).catch(err=>alert(err.message));
+}
+
+/* FACEBOOK LOGIN */
+function facebookLogin(){
+const provider=new firebase.auth.FacebookAuthProvider();
+auth.signInWithPopup(provider).then(result=>{
+const user=result.user;
+db.collection("users").doc(user.uid).set({
+name:user.displayName,
+email:user.email,
+verified:false
+},{merge:true});
+window.location.href="profile.html";
+}).catch(err=>alert(err.message));
+}
+</script>
+
+</body>
+</html>

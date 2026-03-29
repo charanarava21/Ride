@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RIDEX - Your Ride, Your Vibe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg-dark: #0a0a0c;
+            --card-bg: #151518;
+            --brand-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* --- Loader Container --- */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loader-text {
+            font-size: 2.5rem;
+            font-weight: 400;
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            opacity: 0;
+            filter: blur(8px);
+            transform: scale(0.95);
+            padding-left: 0.6em; 
+            animation: brandRevealSlow 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes brandRevealSlow {
+            0% { 
+                opacity: 0; 
+                letter-spacing: 1.5em; 
+                filter: blur(12px); 
+                transform: scale(0.9); 
+            }
+            100% { 
+                opacity: 1; 
+                letter-spacing: 0.6em; 
+                filter: blur(0px); 
+                transform: scale(1); 
+            }
+        }
+
+        /* --- Content Reveal Logic --- */
+        #main-content {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .content-visible {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* --- UI Styles --- */
+        .glass-nav {
+            background: rgba(10, 10, 12, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .brand-text {
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .action-card {
+            background: var(--card-bg);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card:hover {
+            transform: translateY(-8px);
+            background: #1c1c21;
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        /* Info text that appears on hover */
+        .hover-info {
+            max-height: 0;
+            opacity: 0;
+            transition: all 0.4s ease;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            line-height: 1.4;
+            margin-top: 0;
+        }
+
+        .action-card:hover .hover-info {
+            max-height: 80px;
+            opacity: 1;
+            margin-top: 1rem;
+        }
+
+        .feature-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link {
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        .lang-dropdown {
+            background: #151518;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            min-width: 120px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 60;
+        }
+
+        .lang-container:hover .lang-dropdown {
+            display: block;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loader Screen -->
+    <div id="loader">
+        <h1 id="loader-text" class="loader-text">RIDEX</h1>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Navigation -->
+        <nav class="glass-nav fixed top-0 w-full z-50 px-6 py-4 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2 no-underline flex-shrink-0">
+                <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center font-bold text-white">R</div>
+                <span class="text-xl font-bold tracking-tight text-white">RIDEX</span>
+            </a>
+
+            <div class="flex items-center gap-8 text-sm text-gray-400">
+                <a href="aboutus.html" class="nav-link transition-colors hidden md:block">About Us</a>
+                <a href="myride.html" id="myRidesBtn" class="nav-link transition-colors hidden sm:block" style="display:none;">My Rides</a>
+                <a href="profile.html" id="profileBtn" class="nav-link transition-colors">Profile</a>
+                <a href="log.html" id="loginBtn" class="bg-white text-black px-5 py-1.5 rounded-full font-semibold text-sm transition-colors hover:bg-gray-200">
+                    Log In
+                </a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <main class="pt-40 pb-20 px-6 flex flex-col items-center text-center">
+            <h1 class="brand-text text-7xl md:text-8xl mb-4">RIDEX</h1>
+            <p class="text-gray-400 text-xl font-light mb-16">Your Ride, Your Vibe.</p>
+
+            <!-- Action Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mb-32">
+                <!-- Publish Card -->
+                <a href="publish.html" class="action-card rounded-3xl p-10 group">
+                    <div class="w-14 h-14 bg-violet-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-violet-500/20 transition-colors">
+                        <i class="fa-solid fa-plus text-xl text-violet-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Publish</h3>
+                    <p class="text-gray-500 text-sm">Offer a ride to others</p>
+                    <!-- New Hover Detail -->
+                    <div class="hover-info">
+                        Share your journey and save costs by offering empty seats to verified travelers heading your way.
+                    </div>
+                </a>
+
+                <!-- Book Card -->
+                <a href="book.html" class="action-card rounded-3xl p-10 group">
+                    <div class="w-14 h-14 bg-fuchsia-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-fuchsia-500/20 transition-colors">
+                        <i class="fa-solid fa-magnifying-glass text-xl text-fuchsia-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Book</h3>
+                    <p class="text-gray-500 text-sm">Find a ride near you</p>
+                    <!-- New Hover Detail -->
+                    <div class="hover-info">
+                        Browse comfortable and affordable rides shared by trusted drivers going to your destination.
+                    </div>
+                </a>
+
+                <!-- Courier Card -->
+                <a href="courier.html" class="action-card rounded-3xl p-10 group">
+                    <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500/20 transition-colors">
+                        <i class="fa-solid fa-box-open text-xl text-emerald-500"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Courier</h3>
+                    <p class="text-gray-500 text-sm">Deliver your products</p>
+                    <!-- New Hover Detail -->
+                    <div class="hover-info">
+                        Send packages quickly through travelers already moving on your required route safely and efficiently.
+                    </div>
+                </a>
+            </div>
+
+            <!-- About Section -->
+            <div id="about-section" class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-12 text-left px-4">
+                <div class="flex flex-col">
+                    <div class="feature-icon-wrapper">
+                        <i class="fa-solid fa-suitcase-rolling text-gray-400"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">Travel everywhere</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">Explore all over India with countless carpool rides.</p>
+                </div>
+
+                <div class="flex flex-col">
+                    <div class="feature-icon-wrapper">
+                        <i class="fa-solid fa-coins text-gray-400"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">Prices like nowhere</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">Benefit from great-value shared costs on your carpool rides.</p>
+                </div>
+
+                <div class="flex flex-col">
+                    <div class="feature-icon-wrapper">
+                        <i class="fa-solid fa-shield-halved text-gray-400"></i>
+                    </div>
+                    <h4 class="text-xl font-bold mb-3">Ride with confidence</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">Feel secure, knowing you're riding with carpool members with Verified Profiles.</p>
+                </div>
+            </div>
+        </main>
+
+        <a href="help.html" class="fixed bottom-6 right-6 px-4 text-gray-600 hover:text-white transition-colors no-underline">
+            <i class="fa-solid fa-circle-question text-2xl"></i>
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loader-text');
+            const mainContent = document.getElementById('main-content');
+            
+            const hasSeenLoader = sessionStorage.getItem('ridex_loader_seen');
+
+            if (hasSeenLoader) {
+                loader.style.display = 'none';
+                mainContent.classList.add('content-visible');
+            } else {
+                setTimeout(() => {
+                    loaderText.style.visibility = 'hidden';
+                    loaderText.style.opacity = '0';
+                    loader.style.opacity = '0';
+                    mainContent.classList.add('content-visible');
+                    sessionStorage.setItem('ridex_loader_seen', 'true');
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 800); 
+                }, 2500);
+            }
+        });
+
+        document.querySelectorAll('a[href="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                if (this.classList.contains('nav-link')) return; 
+                e.preventDefault();
+            });
+        });
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCd_ydWcFyr8sEmnzF9hQPobLkFMXkeyso",
+            authDomain: "ridex-74948.firebaseapp.com",
+            projectId: "ridex-74948",
+            storageBucket: "ridex-74948.firebasestorage.app",
+            messagingSenderId: "722829487082",
+            appId: "1:722829487082:web:c80538bcd04601fc3d2093"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const loginBtn = document.getElementById("loginBtn");
+        const profileBtn = document.getElementById("profileBtn");
+        const myRidesBtn = document.getElementById("myRidesBtn");
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if(loginBtn) loginBtn.style.display = "none";
+                if(profileBtn) profileBtn.style.display = "inline-block";
+                if(myRidesBtn) myRidesBtn.style.display = "inline-block";
+            } else {
+                if(loginBtn) loginBtn.style.display = "inline-block";
+                if(profileBtn) profileBtn.style.display = "none";
+                if(myRidesBtn) myRidesBtn.style.display = "none";
+            }
+        });
+
+        window.logoutUser = function() {
+            signOut(auth);
+        };
+    </script>
+
+</body>
+</html>

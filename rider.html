@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RIDEX Rider Panel</title>
+</head>
+<body>
+
+<h2>Rider Live Tracking Started 🚀</h2>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCd_ydWcFyr8sEmnzF9hQPobLkFMXkeyso",
+  authDomain: "ridex-74948.firebaseapp.com",
+  projectId: "ridex-74948",
+  storageBucket: "ridex-74948.firebasestorage.app",
+  messagingSenderId: "722829487082",
+  appId: "1:722829487082:web:c80538bcd04601fc3d2093"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+function startTracking() {
+  if (navigator.geolocation) {
+    navigator.geolocation.watchPosition((position) => {
+
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      set(ref(db, 'riders/rider1'), {
+        latitude: lat,
+        longitude: lng,
+        timestamp: Date.now()
+      });
+
+      console.log("Location Updated:", lat, lng);
+
+    }, console.error, {
+      enableHighAccuracy: true
+    });
+  }
+}
+
+startTracking();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About RIDEX - Redefining Travel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap');
+
+        :root {
+            --bg-dark: #050507;
+            --card-bg: #0f0f12;
+            --brand-primary: #8b5cf6;
+            --brand-secondary: #ec4899;
+            --brand-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e5e7eb;
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Premium Nav Style */
+        .glass-nav {
+            background: rgba(5, 5, 7, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-gradient {
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Hero Backdrop */
+        .hero-glow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 30%, rgba(139, 92, 246, 0.15), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Floating Cards */
+        .feature-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-card:hover {
+            border-color: rgba(139, 92, 246, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-10px);
+        }
+
+        /* Stats Section */
+        .stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        /* Journey Line */
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--brand-primary), var(--brand-secondary), transparent);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            width: 50%;
+            padding: 2rem 3rem;
+        }
+
+        .timeline-item.left { left: 0; text-align: right; }
+        .timeline-item.right { left: 50%; text-align: left; }
+
+        .dot {
+            position: absolute;
+            top: 2.5rem;
+            width: 16px;
+            height: 16px;
+            background: var(--brand-gradient);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--brand-primary);
+        }
+
+        .left .dot { right: -8px; }
+        .right .dot { left: -8px; }
+
+        @media (max-width: 768px) {
+            .timeline-container::before { left: 20px; }
+            .timeline-item { width: 100%; left: 0 !important; text-align: left !important; padding-left: 3rem; }
+            .dot { left: 12px !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="glass-nav fixed top-0 w-full z-50 px-6 py-4 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-3 no-underline group">
+            <div class="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center font-black text-white transform group-hover:rotate-12 transition-transform">R</div>
+            <span class="text-2xl font-bold tracking-tighter text-white">RIDEX</span>
+        </a>
+
+        <div class="flex items-center gap-6 text-sm font-medium">
+            <a href="index.html" class="text-gray-400 hover:text-white flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-house-chimney text-xs"></i> Home
+            </a>
+            <div class="h-4 w-px bg-white/10"></div>
+            <a href="profile.html" class="text-gray-400 hover:text-white transition-all">Profile</a>
+            <a href="#" class="bg-white text-black px-6 py-2 rounded-full font-bold hover:bg-gray-200 transition-all shadow-lg shadow-white/5">
+                Log In
+            </a>
+        </div>
+    </nav>
+
+    <div class="hero-glow"></div>
+
+    <main class="pt-48 pb-24 px-6">
+        <!-- Hero Header -->
+        <section class="max-w-5xl mx-auto text-center mb-32">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-bold tracking-widest uppercase mb-6" data-i18n="about_tag">Our Story</span>
+            <h1 class="text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[1.1]" data-i18n="about_hero">
+                The future of <br><span class="text-gradient">shared mobility.</span>
+            </h1>
+            <p class="text-gray-400 text-xl md:text-2xl font-light max-w-3xl mx-auto leading-relaxed" data-i18n="about_intro">
+                Born in the heart of innovation, RIDEX is more than an app—it's a commitment to a greener, more social, and highly efficient world.
+            </p>
+        </section>
+
+        <!-- Stats Grid -->
+        <section class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 mb-40">
+            <div class="stat-box">
+                <div class="text-4xl font-black text-white mb-1">500K+</div>
+                <div class="text-gray-500 text-xs uppercase tracking-widest font-bold">Rides Completed</div>
+            </div>
+            <div class="stat-box">
+                <div class="text-4xl font-black text-white mb-1">100+</div>
+                <div class="text-gray-500 text-xs uppercase tracking-widest font-bold">Cities Covered</div>
+            </div>
+            <div class="stat-box">
+                <div class="text-4xl font-black text-white mb-1">2.4M</div>
+                <div class="text-gray-500 text-xs uppercase tracking-widest font-bold">KGs of CO2 Saved</div>
+            </div>
+            <div class="stat-box">
+                <div class="text-4xl font-black text-white mb-1">4.9/5</div>
+                <div class="text-gray-500 text-xs uppercase tracking-widest font-bold">User Rating</div>
+            </div>
+        </section>
+
+        <!-- Mission & Values -->
+        <section class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-40">
+            <div class="feature-card p-10">
+                <div class="w-14 h-14 bg-violet-500/10 rounded-2xl flex items-center justify-center mb-8 border border-violet-500/20">
+                    <i class="fa-solid fa-leaf text-2xl text-violet-500"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">Eco-Conscious</h3>
+                <p class="text-gray-500 leading-relaxed">We optimize route sharing to ensure that every vehicle on the road is used to its full potential, reducing emissions by up to 60%.</p>
+            </div>
+            <div class="feature-card p-10">
+                <div class="w-14 h-14 bg-pink-500/10 rounded-2xl flex items-center justify-center mb-8 border border-pink-500/20">
+                    <i class="fa-solid fa-shield-heart text-2xl text-pink-500"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">Trust First</h3>
+                <p class="text-gray-500 leading-relaxed">Safety isn't a feature, it's our foundation. Every RIDEX member undergoes multi-step verification to ensure peace of mind.</p>
+            </div>
+            <div class="feature-card p-10">
+                <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-8 border border-blue-500/20">
+                    <i class="fa-solid fa-users-rays text-2xl text-blue-500"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">Human Centric</h3>
+                <p class="text-gray-500 leading-relaxed">We turn lonely commutes into social experiences. Build your professional and social network while you travel.</p>
+            </div>
+        </section>
+
+        <!-- The Timeline -->
+        <section class="max-w-5xl mx-auto mb-40">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl font-black mb-4">Our Evolution</h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-violet-600 to-pink-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="relative timeline-container">
+                <div class="timeline-item left">
+                    <div class="dot"></div>
+                    <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                        <span class="text-violet-500 font-black text-lg">2023 Q1</span>
+                        <h4 class="text-xl font-bold mt-2">The Launchpad</h4>
+                        <p class="text-gray-500 mt-3">RIDEX Beta launched in Bangalore with just 100 users. The response was overwhelming.</p>
+                    </div>
+                </div>
+                <div class="timeline-item right">
+                    <div class="dot"></div>
+                    <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                        <span class="text-pink-500 font-black text-lg">2024 Q2</span>
+                        <h4 class="text-xl font-bold mt-2">National Reach</h4>
+                        <p class="text-gray-500 mt-3">Expansion into 20+ Tier-1 and Tier-2 cities. Introduction of RIDEX Women-Only pools.</p>
+                    </div>
+                </div>
+                <div class="timeline-item left">
+                    <div class="dot"></div>
+                    <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                        <span class="text-emerald-500 font-black text-lg">2025 Q1</span>
+                        <h4 class="text-xl font-bold mt-2">AI Integration</h4>
+                        <p class="text-gray-500 mt-3">Launched "VibeMatch" AI to connect people based on interests and professional backgrounds.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="max-w-6xl mx-auto">
+            <div class="relative overflow-hidden rounded-[40px] p-12 md:p-24 text-center bg-white/5 border border-white/10">
+                <div class="absolute inset-0 bg-gradient-to-br from-violet-600/10 to-transparent pointer-events-none"></div>
+                <h2 class="text-4xl md:text-5xl font-black mb-8">Ready to change the way <br>the world moves?</h2>
+                <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+                    <a href="publish.html" class="bg-violet-600 text-white px-10 py-4 rounded-full font-bold hover:bg-violet-500 transition-all">Start Pooling</a>
+                    <a href="index.html" class="text-white px-10 py-4 rounded-full font-bold border border-white/10 hover:bg-white/5 transition-all">Back to Home</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-20 px-6 border-t border-white/5 text-center">
+        <div class="flex justify-center gap-8 mb-8 text-gray-500">
+            <a href="#" class="hover:text-white transition-colors">Twitter</a>
+            <a href="#" class="hover:text-white transition-colors">LinkedIn</a>
+            <a href="#" class="hover:text-white transition-colors">Instagram</a>
+        </div>
+        <p class="text-gray-600 text-sm font-medium tracking-widest uppercase">&copy; 2025 RIDEX TECHNOLOGIES PTV LTD. ALL RIGHTS RESERVED.</p>
+    </footer>
+
+    <script>
+        const translations = {
+            en: {
+                about_tag: "Our Story",
+                about_hero: "The future of <br><span class='text-gradient'>shared mobility.</span>",
+                about_intro: "Born in the heart of innovation, RIDEX is more than an app—it's a commitment to a greener, more social, and highly efficient world."
+            },
+            hi: {
+                about_tag: "हमारी कहानी",
+                about_hero: "साझा आवागमन का <br><span class='text-gradient'>भविષ્ય।</span>",
+                about_intro: "नवाचार के केंद्र में जन्मा, RIDEX सिर्फ एक ऐप नहीं है—यह एक हरित, अधिक सामाजिक और अत्यधिक कुशल दुनिया के प्रति प्रतिबद्धता है।"
+            }
+        };
+
+        function updateContent() {
+            const lang = localStorage.getItem('ridex_lang') || 'en';
+            const dict = translations[lang] || translations['en'];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.innerHTML = dict[key];
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', updateContent);
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="supabase-config.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>

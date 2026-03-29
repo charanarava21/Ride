@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RIDEX | Secure Payment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        :root { --bg: #050507; --card: #0f0f12; --border: rgba(255,255,255,0.06); --accent: #8b5cf6; }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
+        .pay-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; }
+        .pay-btn { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; font-weight: 800; border: none; cursor: pointer; transition: all 0.3s; }
+        .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(139,92,246,0.4); }
+        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; justify-content: center; align-items: center; }
+        .spinner { width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .secure-badge { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: #10b981; font-weight: 600; }
+        .publish-badge { background: linear-gradient(135deg, rgba(236,72,153,0.1), rgba(139,92,246,0.1)); border: 1px solid rgba(236,72,153,0.2); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <a href="index.html" class="flex items-center gap-2 no-underline">
+            <div class="w-9 h-9 bg-violet-600 rounded-xl flex items-center justify-center font-bold text-white">R</div>
+            <span class="text-xl font-bold text-white">RIDEX</span>
+        </a>
+        <div class="secure-badge">
+            <i class="fas fa-lock"></i> 256-bit SSL Encrypted
+        </div>
+    </div>
+
+    <!-- Purpose Banner -->
+    <div id="purpose-banner" class="publish-badge hidden">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-shield-halved text-pink-400 text-xl"></i>
+            <div>
+                <div class="font-bold text-pink-300 text-sm" id="purpose-title">Security Deposit</div>
+                <div class="text-gray-400 text-xs" id="purpose-desc">Refundable after ride completion</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: Checkout Action -->
+        <div class="lg:col-span-2 space-y-5">
+            <div class="pay-card p-8 flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-violet-500/10 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-shield-check text-3xl text-violet-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Secure Checkout</h2>
+                <p class="text-gray-400 mb-8 max-w-sm">Click the button below to complete your payment using UPI, Cards, or Net Banking via our secure payment gateway.</p>
+                
+                <button id="payBtn" onclick="handlePayment()" class="pay-btn w-full max-w-md py-5 rounded-2xl text-lg font-black mb-4">
+                    <i class="fas fa-lock mr-2"></i> Pay ₹<span id="btn-amount">0.00</span> Securely
+                </button>
+                
+                <div class="flex justify-center gap-6 mt-4 opacity-40">
+                    <i class="fab fa-cc-visa text-2xl"></i>
+                    <i class="fab fa-cc-mastercard text-2xl"></i>
+                    <i class="fab fa-cc-rupay text-2xl"></i>
+                    <i class="fas fa-university text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Summary -->
+        <div>
+            <div class="pay-card p-6 sticky top-8">
+                <h2 class="text-base font-bold mb-5">Order Summary</h2>
+                <div id="ride-summary-details" class="space-y-3 text-sm text-gray-400 mb-5 pb-5 border-b border-white/5">
+                    <div class="flex gap-2 animate-pulse text-gray-600"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
+                </div>
+                <div class="space-y-2 text-sm mb-5">
+                    <div class="flex justify-between text-gray-400"><span>Base Amount</span><span id="base-amount">₹0</span></div>
+                    <div class="flex justify-between text-gray-400"><span>Convenience Fee</span><span class="text-emerald-400">FREE</span></div>
+                    <div class="flex justify-between font-black text-white text-lg border-t border-white/10 pt-3 mt-3">
+                        <span>Total</span><span id="summary-total" class="text-violet-400">₹0</span>
+                    </div>
+                </div>
+                <div class="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-3 text-xs text-emerald-400 flex items-start gap-2">
+                    <i class="fas fa-shield-alt mt-0.5"></i>
+                    <span>Your payment is encrypted and processed securely. Deposit is 100% refundable upon ride completion.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Overlay -->
+<div class="overlay" id="overlay">
+    <div class="text-center">
+        <div class="spinner mx-auto mb-6"></div>
+        <div class="text-xl font-bold text-white mb-2">Processing Payment...</div>
+        <div class="text-gray-500 text-sm">Please do not close this window</div>
+    </div>
+</div>
+
+<!-- Success Overlay -->
+<div class="overlay" id="success-overlay">
+    <div class="bg-[#0f0f12] border border-white/10 rounded-3xl p-10 text-center max-w-sm w-full mx-4">
+        <div class="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-check text-4xl text-emerald-400"></i>
+        </div>
+        <h3 class="text-2xl font-black mb-2">Payment Successful!</h3>
+        <p id="success-msg" class="text-gray-400 text-sm mb-2"></p>
+        <p id="txn-id" class="font-mono text-xs text-violet-400 bg-violet-500/10 px-3 py-1.5 rounded-lg inline-block mb-6"></p>
+        <button onclick="window.location.href='myride.html'" class="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-2xl transition-all">
+            View My Rides <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCd_ydWcFyr8sEmnzF9hQPobLkFMXkeyso",
+    authDomain: "ridex-74948.firebaseapp.com",
+    projectId: "ridex-74948",
+    storageBucket: "ridex-74948.firebasestorage.app",
+    messagingSenderId: "722829487082",
+    appId: "1:722829487082:web:c80538bcd04601fc3d2093"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let currentUser = null;
+
+onAuthStateChanged(auth, user => {
+    currentUser = user;
+    if (!user) { window.location.href = 'log.html'; }
+});
+
+// ── Parse URL Params ──────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const amount = parseFloat(params.get('amount') || 0).toFixed(2);
+const paymentType = params.get('type') || 'book'; 
+const rideParam = params.get('ride');             
+const bookingParam = params.get('booking');       
+const purposeLabel = params.get('purpose') || 'Payment';
+
+// ── Update UI ─────────────────────────────────────────────
+document.getElementById('btn-amount').textContent = amount;
+document.getElementById('summary-total').textContent = '₹' + amount;
+document.getElementById('base-amount').textContent = '₹' + amount;
+
+// Purpose banner
+if (paymentType === 'publish') {
+    const banner = document.getElementById('purpose-banner');
+    banner.classList.remove('hidden');
+    document.getElementById('purpose-title').textContent = purposeLabel || 'Security Deposit for Publishing';
+    document.getElementById('purpose-desc').textContent = 'Refundable after ride completion • 10% of total ride value';
+}
+
+// Summary panel
+if (rideParam) {
+    try {
+        const rd = JSON.parse(decodeURIComponent(rideParam));
+        const stopsHtml = (rd.stops && rd.stops.length > 0)
+            ? `<div class="flex justify-between"><span>Stops</span><span class="text-yellow-400 text-right" style="max-width:60%">${rd.stops.join(' → ')}</span></div>`
+            : '';
+        document.getElementById('ride-summary-details').innerHTML = `
+            <div class="flex justify-between"><span>From</span><span class="text-white font-semibold">${rd.from || '-'}</span></div>
+            ${stopsHtml}
+            <div class="flex justify-between"><span>To</span><span class="text-white font-semibold">${rd.to || '-'}</span></div>
+            <div class="flex justify-between"><span>Date</span><span class="text-white">${rd.date || '-'} ${rd.time || ''}</span></div>
+            <div class="flex justify-between"><span>Type</span><span class="text-white capitalize">${rd.serviceType || '-'}</span></div>
+            <div class="flex justify-between"><span>Seats</span><span class="text-white">${rd.seats || '-'}</span></div>
+            <div class="flex justify-between"><span>Price/Seat</span><span class="text-white">₹${rd.price || 0}</span></div>
+            <div class="flex justify-between pt-2 border-t border-white/5"><span>Payment Type</span><span class="text-amber-400 font-semibold">Security Deposit (10%)</span></div>
+        `;
+    } catch(e) {}
+} else if (bookingParam) {
+    try {
+        const bk = JSON.parse(decodeURIComponent(bookingParam));
+        const stopsHtml = (bk.stops && bk.stops.length > 0)
+            ? `<div class="flex justify-between"><span>Stops</span><span class="text-yellow-400 text-right">${bk.stops.join(' → ')}</span></div>`
+            : '';
+        document.getElementById('ride-summary-details').innerHTML = `
+            <div class="flex justify-between"><span>From</span><span class="text-white font-semibold">${bk.from || '-'}</span></div>
+            ${stopsHtml}
+            <div class="flex justify-between"><span>To</span><span class="text-white font-semibold">${bk.to || '-'}</span></div>
+            <div class="flex justify-between"><span>Date</span><span class="text-white">${bk.date || '-'}</span></div>
+            <div class="flex justify-between"><span>Seats</span><span class="text-white">${bk.seats || 1}</span></div>
+            <div class="flex justify-between"><span>Passengers</span><span class="text-white text-right" style="max-width:55%">${(bk.passengers || []).map(p=>p.name).filter(Boolean).join(', ') || '-'}</span></div>
+            <div class="flex justify-between pt-2 border-t border-white/5"><span>Payment Type</span><span class="text-emerald-400 font-semibold">Full Payment</span></div>
+        `;
+    } catch(e) {}
+}
+
+// ── Payment Handler ───────────────────────────────────────
+window.handlePayment = async function () {
+    try {
+        const res = await fetch("http://localhost:5000/create-order", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount)
+            })
+        });
+
+        const order = await res.json();
+
+        const options = {
+            "key": "rzp_test_SWvRFXelQNYrvv", // Use your actual key
+            "amount": order.amount,
+            "currency": order.currency,
+            "name": "RIDEX",
+            "description": "Ride Payment",
+            "order_id": order.id,
+            "handler": function (response) {
+                const txnId = response.razorpay_payment_id;
+                document.getElementById('success-msg').textContent = 'Payment Successful!';
+                document.getElementById('txn-id').textContent = 'Txn ID: ' + txnId;
+                document.getElementById('success-overlay').style.display = 'flex';
+            },
+            "theme": {
+                "color": "#8b5cf6"
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } catch (error) {
+        console.error("Payment failed", error);
+    }
+};
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</body>
+</html>

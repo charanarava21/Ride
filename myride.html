@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Activity - RIDEX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg-dark: #0a0a0c;
+            --card-bg: #151518;
+            --accent-purple: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-blue: #3b82f6;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+
+        .glass-nav {
+            background: rgba(10, 10, 12, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .activity-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+        }
+
+        .activity-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .type-pill {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .type-published { background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.2); }
+        .type-booked { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .type-courier { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="glass-nav fixed top-0 w-full z-50 px-6 py-4 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center font-bold text-white">R</div>
+            <span class="text-xl font-bold text-white">RIDEX</span>
+        </a>
+        <div class="flex items-center gap-6 text-sm">
+            <a href="index.html" class="text-gray-400 hover:text-white transition-colors">Home</a>
+            <a href="book.html" class="text-gray-400 hover:text-white transition-colors">Find Ride</a>
+            <a href="profile.html">
+            <div class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center border border-white/10">
+                <i class="fa-solid fa-user text-xs"></i>
+            </div>
+            </a>
+        </div>
+    </nav>
+    
+
+    <main class="pt-32 pb-20 px-6 max-w-5xl mx-auto">
+        <div class="mb-10">
+            <h1 class="text-4xl font-extrabold mb-2">My Activity</h1>
+            <p class="text-gray-500">Track your published rides and confirmed bookings.</p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 bg-white/5 p-4 rounded-3xl border border-white/5">
+            <div class="flex flex-wrap gap-2">
+                <button class="tab-btn active category-filter" onclick="window.filterBy('all', this)">All Activity</button>
+                <button class="tab-btn category-filter" onclick="window.filterBy('published', this)">Published</button>
+                <button class="tab-btn category-filter" onclick="window.filterBy('booked', this)">Booked</button>
+            </div>
+            
+            <div class="flex gap-4 items-center">
+                <span id="activity-count" class="text-xs font-bold text-gray-500 uppercase tracking-widest">0 Items</span>
+            </div>
+        </div>
+
+        <div class="space-y-4" id="activityContainer">
+            <!-- Data will be injected here -->
+            <div class="p-20 text-center animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-violet-500"></i>
+                <p class="mt-4 text-gray-500">Syncing your activity...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex flex-col items-center justify-center py-20 text-center">
+            <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                <i class="fa-solid fa-folder-open text-3xl text-gray-700"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">No records found</h3>
+            <p class="text-gray-500 max-w-xs">You haven't published or booked any rides yet.</p>
+        </div>
+       <!-- Ride Details Modal -->
+<div id="rideModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50">
+
+<div class="bg-[#151518] border border-white/10 rounded-3xl w-[92%] max-w-xl p-7 relative shadow-2xl">
+
+<button onclick="closeModal()" 
+class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">
+<i class="fa-solid fa-xmark"></i>
+</button>
+
+<h2 class="text-2xl font-extrabold mb-6">Ride Details</h2>
+
+<div class="space-y-5">
+
+<!-- Route -->
+<div class="bg-white/5 rounded-xl p-4">
+<div class="text-xs text-gray-400 mb-2">Route</div>
+
+<div class="flex items-center gap-3 text-lg font-bold">
+<span id="detailFrom"></span>
+<i class="fa-solid fa-arrow-right text-gray-500"></i>
+<span id="detailTo"></span>
+</div>
+
+</div>
+
+<!-- Date Time -->
+<div class="grid grid-cols-2 gap-4">
+
+<div class="bg-white/5 rounded-xl p-4">
+<div class="text-xs text-gray-400 mb-1">Date</div>
+<div id="detailDate" class="font-bold"></div>
+</div>
+
+<div class="bg-white/5 rounded-xl p-4">
+<div class="text-xs text-gray-400 mb-1">Time</div>
+<div id="detailTime" class="font-bold"></div>
+</div>
+
+</div>
+
+<!-- Seats -->
+<div class="bg-white/5 rounded-xl p-4 flex justify-between">
+<span class="text-gray-400 text-sm">Seats</span>
+<span id="detailSeats" class="font-bold"></span>
+</div>
+
+<!-- Booking ID -->
+<div class="bg-white/5 rounded-xl p-4 flex justify-between">
+<span class="text-gray-400 text-sm">Booking ID</span>
+<span id="detailBooking" class="font-mono text-violet-400 text-sm"></span>
+</div>
+
+<!-- Amount -->
+<div class="bg-white/5 rounded-xl p-4 flex justify-between">
+<span class="text-gray-400 text-sm">Amount Paid</span>
+<span id="detailAmount" class="font-bold text-emerald-400"></span>
+<div id="manageActions" class="mt-6 grid grid-cols-3 gap-3 hidden">
+
+<button onclick="enableEdit()"
+class="bg-violet-600 hover:bg-violet-700 p-2 rounded-lg text-sm font-bold">
+Edit
+</button>
+
+<button onclick="cancelRide()"
+class="bg-red-600 hover:bg-red-700 p-2 rounded-lg text-sm font-bold">
+Cancel
+</button>
+
+<button onclick="togglePassengers()"
+class="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg text-sm font-bold">
+Passengers
+</button>
+
+</div>
+</div>
+<div id="passengerSection" class="mt-6 hidden">
+
+<div class="text-sm text-gray-400 mb-3">Passenger Details</div>
+
+<div id="passengerList" class="space-y-3"></div>
+
+</div>
+
+</div>
+
+</div>
+</div>
+<!-- Manage Ride Modal -->
+<div id="manageModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50">
+
+<div class="bg-[#151518] border border-white/10 rounded-3xl w-[92%] max-w-xl p-7 relative">
+
+<button onclick="closeManage()" 
+class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">
+<i class="fa-solid fa-xmark"></i>
+</button>
+
+<h2 class="text-2xl font-extrabold mb-6">Manage Ride</h2>
+
+<div class="space-y-4">
+
+<div>
+<label class="text-xs text-gray-400">From</label>
+<input id="editFrom" class="w-full bg-white/5 p-3 rounded-lg mt-1">
+</div>
+
+<div>
+<label class="text-xs text-gray-400">To</label>
+<input id="editTo" class="w-full bg-white/5 p-3 rounded-lg mt-1">
+</div>
+
+<div class="grid grid-cols-2 gap-3">
+
+<div>
+<label class="text-xs text-gray-400">Date</label>
+<input id="editDate" type="date" class="w-full bg-white/5 p-3 rounded-lg mt-1">
+</div>
+
+<div>
+<label class="text-xs text-gray-400">Time</label>
+<input id="editTime" type="time" class="w-full bg-white/5 p-3 rounded-lg mt-1">
+</div>
+
+</div>
+
+<div>
+<label class="text-xs text-gray-400">Seats</label>
+<input id="editSeats" type="number" class="w-full bg-white/5 p-3 rounded-lg mt-1">
+</div>
+
+<button onclick="saveRide()" 
+class="w-full bg-violet-600 hover:bg-violet-700 p-3 rounded-xl font-bold mt-4">
+Save Changes
+</button>
+
+</div>
+
+</div>
+</div>
+<!-- Refund Modal -->
+<div id="refundModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50">
+
+<div class="bg-[#151518] border border-white/10 rounded-3xl w-[92%] max-w-md p-7 text-center">
+
+<div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+<i class="fa-solid fa-money-bill-wave text-emerald-400 text-2xl"></i>
+</div>
+
+<h2 class="text-2xl font-extrabold mb-2">Refund Available</h2>
+
+<p class="text-gray-400 text-sm mb-6">
+This ride was cancelled by the driver.<br>
+You can claim your refund + compensation.
+</p>
+
+<div class="bg-white/5 rounded-xl p-4 mb-6">
+
+<div class="flex justify-between text-sm mb-2">
+<span class="text-gray-400">Ride Amount</span>
+<span id="refundRideAmount"></span>
+</div>
+
+<div class="flex justify-between text-sm mb-2">
+<span class="text-gray-400">Compensation (5%)</span>
+<span id="refundCompensation" class="text-emerald-400"></span>
+</div>
+
+<div class="border-t border-white/10 my-3"></div>
+
+<div class="flex justify-between font-bold">
+<span>Total Refund</span>
+<span id="refundTotal" class="text-emerald-400"></span>
+</div>
+
+</div>
+
+<button onclick="confirmRefund()"
+class="w-full bg-emerald-600 hover:bg-emerald-700 p-3 rounded-xl font-bold mb-2">
+Claim Refund
+</button>
+
+<button onclick="closeRefund()"
+class="w-full bg-white/5 hover:bg-white/10 p-3 rounded-xl text-sm">
+Close
+</button>
+
+</div>
+</div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+getFirestore,
+collection,
+onSnapshot,
+query,
+orderBy,
+doc,
+updateDoc,
+getDocs,
+deleteDoc
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCd_ydWcFyr8sEmnzF9hQPobLkFMXkeyso",
+            authDomain: "ridex-74948.firebaseapp.com",
+            projectId: "ridex-74948",
+            storageBucket: "ridex-74948.firebasestorage.app",
+            messagingSenderId: "722829487082",
+            appId: "1:722829487082:web:c80538bcd04601fc3d2093"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth();
+        
+
+        const activityContainer = document.getElementById("activityContainer");
+        const emptyState = document.getElementById("emptyState");
+        const countDisplay = document.getElementById("activity-count");
+
+        let allData = [];
+        let currentFilter = 'all';
+        onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        // redirect to login if not signed in
+        window.location.href = "login.html";
+        return;
+    }
+
+    const uid = user.uid; // current logged-in user UID
+    setupRealtimeListeners(uid);
+});
+
+        // Listen to BOTH published rides and bookings
+        function setupRealtimeListeners(uid) {
+    // Published Rides by this user only
+    onSnapshot(
+        query(collection(db, "rides"), orderBy("createdAt", "desc")),
+        (snap) => {
+            const rides = snap.docs
+    .map(doc => ({ ...doc.data(), id: doc.id, type: 'published' }))
+    .filter(ride => ride.publisherId === uid && ride.status !== "cancelled");
+
+            // Bookings made by this user only
+            onSnapshot(
+                query(collection(db, "bookings"), orderBy("createdAt", "desc")),
+                (bookSnap) => {
+                    const bookings = bookSnap.docs
+                        .map(doc => ({ ...doc.data(), id: doc.id, type: 'booked' }))
+                        .filter(booking => booking.userId === uid); // <-- Only this user’s bookings
+
+                    // Merge and sort
+                    allData = [...rides, ...bookings].sort((a, b) => {
+                        const dateA = a.createdAt?.seconds || 0;
+                        const dateB = b.createdAt?.seconds || 0;
+                        return dateB - dateA;
+                    });
+
+                    renderActivity();
+                }
+            );
+        }
+    );
+}
+
+        function renderActivity() {
+            const filtered = allData.filter(item => currentFilter === 'all' || item.type === currentFilter);
+            
+            activityContainer.innerHTML = "";
+            countDisplay.innerText = `${filtered.length} Items`;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            filtered.forEach(item => {
+                const card = document.createElement("div");
+                card.className = "activity-card flex flex-col md:flex-row gap-6";
+                
+                if (item.type === "published") {
+                    card.innerHTML = `
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="type-pill type-published">Published by you</span>
+                                <span class="text-xs text-gray-500"><span class="status-dot bg-amber-500"></span>Active • ${item.seats || 0} Seats left</span>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="flex-1">
+                                    <div class="text-xs text-gray-500 uppercase font-bold mb-1">Route</div>
+                                    <div class="flex items-center gap-3 font-bold text-lg">
+                                        ${item.from} <i class="fa-solid fa-arrow-right text-sm text-gray-600"></i> ${item.to}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-500 uppercase font-bold mb-1">Departure</div>
+                                    <div class="font-bold">${item.date || 'TBA'}, ${item.time || ''}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end gap-3 md:border-l border-white/5 md:pl-6">
+                            <button onclick="manageRide('${item.id}')"
+class="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold transition-colors">
+Manage
+</button>
+                        </div>
+                    `;
+                } else if (item.type === "booked") {
+                    card.innerHTML = `
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="type-pill type-booked">Booked Ride</span>
+                                ${item.status === "cancelled_by_driver"
+? `<span class="text-xs text-red-400"><span class="status-dot bg-red-500"></span>Ride Cancelled</span>`
+: `<span class="text-xs text-gray-500"><span class="status-dot bg-emerald-500"></span>Confirmed</span>`
+}
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="flex-1">
+                                    <div class="text-xs text-gray-500 uppercase font-bold mb-1">Route</div>
+                                    <div class="flex items-center gap-3 font-bold text-lg">
+                                        ${item.from} <i class="fa-solid fa-arrow-right text-sm text-gray-600"></i> ${item.to}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-500 uppercase font-bold mb-1">Booking ID</div>
+                                    <div class="font-bold font-mono text-violet-400 text-sm">${item.bookingId || '#RDX-TEMP'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end gap-3 md:border-l border-white/5 md:pl-6">
+
+<div class="text-right mr-4">
+<div class="text-[10px] text-gray-500 uppercase font-bold">Paid</div>
+<div class="font-bold text-white text-sm">₹${item.amount || item.total || item.price || 0}</div>
+</div>
+
+${item.status === "cancelled_by_driver"
+? `<button onclick="claimCompensation('${item.id}')"
+class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-xs font-bold">
+Claim ₹${(item.amount || item.price || 0) + (item.compensation || 0)}
+</button>`
+: `<button onclick="viewRide('${item.id}')"
+class="px-6 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold">
+Details
+</button>`
+}
+
+</div>
+                    `;
+                }
+                activityContainer.appendChild(card);
+            });
+        }
+
+        window.filterBy = (val, el) => {
+            currentFilter = val;
+            document.querySelectorAll('.category-filter').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+            renderActivity();
+        };
+
+   window.viewRide = (id) => {
+
+const ride = allData.find(r => r.id === id);
+
+if(!ride) return;
+
+document.getElementById("detailFrom").innerText = ride.from || "-";
+document.getElementById("detailTo").innerText = ride.to || "-";
+
+document.getElementById("detailDate").innerText = ride.date || "-";
+document.getElementById("detailTime").innerText = ride.time || "-";
+
+document.getElementById("detailSeats").innerText = ride.seats || "-";
+
+document.getElementById("detailBooking").innerText =
+ride.bookingId || "#RDX-" + id.substring(0,6);
+
+document.getElementById("detailAmount").innerText =
+"₹" + (ride.amount || ride.total || ride.price || 0);
+
+const modal = document.getElementById("rideModal");
+modal.classList.remove("hidden");
+modal.classList.add("flex");
+
+};
+
+window.closeModal = () => {
+
+const modal = document.getElementById("rideModal");
+modal.classList.add("hidden");
+
+};
+let editingRideId = null;
+
+window.manageRide = async (rideId) => {
+
+editingRideId = rideId;
+document.getElementById("manageActions").classList.remove("hidden");
+
+const ride = allData.find(r => r.id === rideId);
+if(!ride) return;
+
+/* ride details fill */
+
+document.getElementById("detailFrom").innerText = ride.from || "-";
+document.getElementById("detailTo").innerText = ride.to || "-";
+
+document.getElementById("detailDate").innerText = ride.date || "-";
+document.getElementById("detailTime").innerText = ride.time || "-";
+
+document.getElementById("detailSeats").innerText = ride.seats || "-";
+
+document.getElementById("detailBooking").innerText =
+"#RDX-" + rideId.substring(0,6);
+
+document.getElementById("detailAmount").innerText =
+"₹" + (ride.price || 0);
+
+/* show passenger section */
+
+const passengerSection = document.getElementById("passengerSection");
+const passengerList = document.getElementById("passengerList");
+
+passengerSection.classList.remove("hidden");
+passengerList.innerHTML = "";
+
+/* get passengers */
+
+const bookingSnap = await getDocs(collection(db,"bookings"));
+
+const bookings = bookingSnap.docs
+.map(doc => doc.data())
+.filter(b => b.rideId === rideId);
+
+if(bookings.length === 0){
+
+passengerList.innerHTML =
+"<p class='text-gray-500 text-sm'>No passengers booked yet</p>";
+
+}else{
+
+bookings.forEach(b => {
+
+const div = document.createElement("div");
+
+div.className =
+"bg-white/5 p-3 rounded-lg flex justify-between";
+
+div.innerHTML = `
+<div>
+<div class="font-bold">${b.name || "Passenger"}</div>
+<div class="text-xs text-gray-400">${b.phone || "-"}</div>
+</div>
+
+<div class="text-sm text-gray-300">
+Seats: ${b.seats || 1}
+</div>
+`;
+
+passengerList.appendChild(div);
+
+});
+
+}
+
+/* show modal */
+
+const modal = document.getElementById("rideModal");
+modal.classList.remove("hidden");
+modal.classList.add("flex");
+
+};
+window.closeManage = () => {
+
+document.getElementById("manageModal").classList.add("hidden");
+
+};
+
+window.saveRide = async () => {
+
+if(!editingRideId) return;
+
+/* get booked seats */
+
+const bookingSnap = await getDocs(collection(db,"bookings"));
+
+const bookings = bookingSnap.docs
+.map(doc => doc.data())
+.filter(b => b.rideId === editingRideId);
+
+let bookedSeats = 0;
+
+bookings.forEach(b => {
+bookedSeats += Number(b.seats || 1);
+});
+
+/* new seats entered */
+
+const newSeats = Number(document.getElementById("editSeats").value);
+
+/* validation */
+
+if(newSeats < bookedSeats){
+
+alert(
+`Cannot reduce seats.\n\nAlready ${bookedSeats} seats booked by passengers.`
+);
+
+return;
+
+}
+
+/* update ride */
+
+const rideRef = doc(db,"rides",editingRideId);
+
+await updateDoc(rideRef,{
+
+from: document.getElementById("editFrom").value,
+to: document.getElementById("editTo").value,
+date: document.getElementById("editDate").value,
+time: document.getElementById("editTime").value,
+seats: newSeats
+
+});
+
+alert("Ride updated successfully");
+
+closeManage();
+
+};
+window.enableEdit = () => {
+
+const ride = allData.find(r => r.id === editingRideId);
+if(!ride) return;
+
+/* fill existing values */
+
+document.getElementById("editFrom").value = ride.from || "";
+document.getElementById("editTo").value = ride.to || "";
+document.getElementById("editDate").value = ride.date || "";
+document.getElementById("editTime").value = ride.time || "";
+document.getElementById("editSeats").value = ride.seats || "";
+
+/* open modal */
+
+const modal = document.getElementById("manageModal");
+modal.classList.remove("hidden");
+modal.classList.add("flex");
+
+};
+window.cancelRide = async () => {
+
+if(!editingRideId) return;
+
+/* get bookings of this ride */
+
+const bookingSnap = await getDocs(collection(db,"bookings"));
+
+const bookings = bookingSnap.docs
+.map(doc => ({id:doc.id,...doc.data()}))
+.filter(b => b.rideId === editingRideId);
+
+/* warning */
+
+if(bookings.length > 0){
+
+const confirmCancel = confirm(
+"Passengers already booked this ride.\n\nYour security deposit will NOT be refunded if you cancel.\n\nDo you still want to cancel?"
+);
+
+if(!confirmCancel) return;
+
+}
+
+/* update passenger bookings */
+
+for(const b of bookings){
+
+const compensation = Math.round((b.amount || 0) * 0.05);
+
+await updateDoc(doc(db,"bookings",b.id),{
+
+status:"cancelled_by_driver",
+compensation:compensation
+
+});
+
+}
+
+/* delete ride */
+
+await deleteDoc(doc(db,"rides",editingRideId));
+
+alert("Ride cancelled successfully");
+
+closeModal();
+
+};
+window.togglePassengers = () => {
+
+const section = document.getElementById("passengerSection");
+
+section.classList.toggle("hidden");
+
+};
+let refundBookingId = null;
+
+window.claimCompensation = (bookingId) => {
+
+const booking = allData.find(b => b.id === bookingId);
+if(!booking) return;
+
+refundBookingId = bookingId;
+
+const rideAmount = Number(booking.amount || booking.price || 0);
+const compensation = Number(booking.compensation || 0);
+const total = rideAmount + compensation;
+
+document.getElementById("refundRideAmount").innerText = "₹" + rideAmount;
+document.getElementById("refundCompensation").innerText = "₹" + compensation;
+document.getElementById("refundTotal").innerText = "₹" + total;
+
+const modal = document.getElementById("refundModal");
+modal.classList.remove("hidden");
+modal.classList.add("flex");
+
+};
+window.confirmRefund = async () => {
+
+if(!refundBookingId) return;
+
+await updateDoc(doc(db,"bookings",refundBookingId),{
+status:"refund_claimed"
+});
+
+alert("Refund claimed successfully");
+
+closeRefund();
+
+};
+window.closeRefund = () => {
+
+const modal = document.getElementById("refundModal");
+modal.classList.add("hidden");
+
+};
+    </script>
+</body>
+</html>

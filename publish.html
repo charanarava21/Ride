@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publish a Ride - RIDEX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        :root { --bg: #050507; --card: #0f0f12; --accent: #8b5cf6; }
+        body { background: var(--bg); color: #e5e7eb; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
+        .glass-nav { background: rgba(5,5,7,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .card { background: var(--card); border: 1px solid rgba(255,255,255,0.07); border-radius: 24px; padding: 1.5rem; }
+        .ibox { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 0.8rem 1rem; transition: all 0.25s; position: relative; }
+        .ibox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+        .ibox label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; display: block; margin-bottom: 4px; }
+        .ibox input, .ibox select { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.9rem; font-family: inherit; }
+        #map { width: 100%; height: 360px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.07); background: #111; }
+        .apill { display: inline-flex; align-items: center; gap: 5px; background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 3px 9px; font-size: 0.75rem; color: #c4b5fd; margin: 3px 2px; }
+
+        /* Stop row - inline text + pin button */
+        .stop-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 9px 12px; margin-bottom: 6px; }
+        .stop-num { width: 24px; height: 24px; border-radius: 50%; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #f87171; flex-shrink: 0; }
+        .stop-del { width: 24px; height: 24px; border-radius: 50%; background: transparent; border: none; cursor: pointer; color: #6b7280; margin-left: auto; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stop-del:hover { color: #ef4444; }
+
+        /* Inline stop add box */
+        .stop-add-inline { background: rgba(139,92,246,0.04); border: 1px dashed rgba(139,92,246,0.25); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+        .stop-add-inline input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.88rem; font-family: inherit; }
+        .stop-add-inline input::placeholder { color: #6b7280; }
+        .pin-btn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 5px 10px; color: #f87171; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+        .pin-btn:hover, .pin-btn.active { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+        .add-stop-confirm { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.35); border-radius: 8px; padding: 5px 12px; color: #a78bfa; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s; }
+        .add-stop-confirm:hover { background: rgba(139,92,246,0.25); }
+        .btn-stop { background: rgba(139,92,246,0.07); border: 1px dashed rgba(139,92,246,0.3); border-radius: 12px; padding: 9px; width: 100%; color: #a78bfa; font-size: 0.85rem; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .btn-stop:hover { background: rgba(139,92,246,0.15); border-style: solid; }
+        .btn-pub { background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); border: none; border-radius: 14px; padding: 14px; width: 100%; color: white; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.3s; }
+        .btn-pub:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(139,92,246,0.35); }
+        .btn-pub:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .seat-b { width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: white; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .seat-b.on { background: rgba(139,92,246,0.2); border-color: var(--accent); color: #a78bfa; }
+        .tip { background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 10px; padding: 8px 12px; font-size: 0.78rem; color: #a78bfa; margin-bottom: 10px; }
+        .deposit-info { background: rgba(236,72,153,0.06); border: 1px solid rgba(236,72,153,0.2); border-radius: 12px; padding: 12px 14px; font-size: 0.8rem; color: #f9a8d4; }
+
+        /* Autocomplete for stop */
+        .stop-ac-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #1a1a1f; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; z-index: 500; display: none; box-shadow: 0 20px 40px rgba(0,0,0,0.7); overflow: hidden; }
+        .stop-ac-item { padding: 11px 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: rgba(255,255,255,0.75); }
+        .stop-ac-item:hover { background: rgba(139,92,246,0.1); color: white; }
+
+        /* Map pin indicator */
+        .map-pin-hint { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 8px 12px; font-size: 0.78rem; color: #f87171; margin-top: 8px; display: none; }
+        .map-pin-hint.show { display: block; }
+
+        .leaflet-tile { filter: brightness(0.6) invert(1) hue-rotate(180deg) saturate(0.4); }
+    </style>
+</head>
+<body>
+
+<nav class="glass-nav fixed top-0 w-full z-50 px-6 py-4 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 no-underline">
+        <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center font-bold text-white">R</div>
+        <span class="text-xl font-bold text-white">RIDEX</span>
+    </a>
+    <div class="flex items-center gap-5 text-sm text-gray-400">
+        <a href="myride.html" class="hover:text-white">My Rides</a>
+        <a href="profile.html" class="hover:text-white">Profile</a>
+    </div>
+</nav>
+
+<main class="pt-28 pb-20 px-4 max-w-5xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-black">Publish a Ride</h1>
+        <p class="text-gray-500 mt-1">Share your journey, offset fuel costs, help others travel.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        <!-- FORM COLUMN -->
+        <div class="space-y-4">
+
+            <!-- Route -->
+            <div class="card">
+                <h2 class="font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide text-gray-400">
+                    <i class="fa-solid fa-route text-violet-500"></i> Route
+                </h2>
+
+                <!-- FROM -->
+                <div class="ibox mb-3" id="from-box">
+                    <label>Starting Point</label>
+                    <input type="text" id="from-input" placeholder="Search or click map..." autocomplete="off" onfocus="setActive('from')">
+                    <div id="from-details" class="mt-2"></div>
+                </div>
+
+                <!-- STOPS SECTION -->
+                <div id="stops-list"></div>
+
+                <!-- Inline Stop Add -->
+                <div id="stop-add-section" class="stop-add-inline mb-3" style="display:none;">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-map-pin text-red-400 text-xs"></i>
+                        <label style="font-size:10px;font-weight:700;text-transform:uppercase;color:#6b7280;letter-spacing:0.08em;">New Stop</label>
+                    </div>
+                    <div class="flex items-center gap-2 relative">
+                        <input type="text" id="stop-text-input" placeholder="Type stop name or address..." autocomplete="off" oninput="onStopTextInput()" onfocus="setActive('stop')">
+                        <button class="pin-btn" id="pinStopBtn" onclick="activateMapPin()" title="Pin on map">
+                            <i class="fa-solid fa-map-pin"></i> Pin Map
+                        </button>
+                        <div id="stop-ac" class="stop-ac-list"></div>
+                    </div>
+                    <div class="map-pin-hint" id="mapPinHint">
+                        <i class="fa-solid fa-hand-pointer mr-1"></i> Click anywhere on the map to drop this stop pin
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button class="add-stop-confirm" onclick="confirmStopAdd()">
+                            <i class="fa-solid fa-check"></i> Add Stop
+                        </button>
+                        <button onclick="cancelStopAdd()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 12px;color:#9ca3af;font-size:0.8rem;font-weight:600;cursor:pointer;">Cancel</button>
+                    </div>
+                </div>
+
+                <button class="btn-stop mb-3" onclick="showStopAdd()">
+                    <i class="fa-solid fa-plus mr-1"></i> Add a Stop (Optional)
+                </button>
+
+                <!-- TO -->
+                <div class="ibox" id="to-box">
+                    <label>Destination</label>
+                    <input type="text" id="to-input" placeholder="Search or click map..." autocomplete="off" onfocus="setActive('to')">
+                    <div id="to-details" class="mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Journey Details -->
+            <div class="card">
+                <h2 class="font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wide text-gray-400">
+                    <i class="fa-solid fa-calendar text-violet-500"></i> Journey Details
+                </h2>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="ibox">
+                        <label>Date</label>
+                        <input type="date" id="ride-date">
+                    </div>
+                    <div class="ibox">
+                        <label>Departure Time</label>
+                        <input type="time" id="ride-time">
+                    </div>
+                </div>
+                <div class="ibox mb-3">
+                    <label>Price per Seat (₹)</label>
+                    <input type="number" id="ride-price" placeholder="0" min="0" oninput="updateDepositInfo()">
+                </div>
+                <div class="ibox mb-3">
+                    <label>Service Type</label>
+                    <select id="ride-type">
+                        <option value="Car">Car</option>
+                        <option value="Bike">Bike</option>
+                        <option value="courier">Courier</option>
+                    </select>
+                </div>
+                <div class="ibox mb-3">
+                    <label>Accept Courier</label>
+                    <select id="courier-toggle" onchange="toggleCourierFee()">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+                <div class="ibox mb-3" id="courier-fee-box" style="display:none;">
+                    <label>Courier Fee (₹)</label>
+                    <input type="number" id="courier-fee" placeholder="Enter courier price">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Available Seats</label>
+                    <div class="flex gap-2" id="seat-picker">
+                        <button class="seat-b" onclick="selectSeats(1)">1</button>
+                        <button class="seat-b on" onclick="selectSeats(2)">2</button>
+                        <button class="seat-b" onclick="selectSeats(3)">3</button>
+                        <button class="seat-b" onclick="selectSeats(4)">4</button>
+                        <button class="seat-b" onclick="selectSeats(5)">5</button>
+                        <button class="seat-b" onclick="selectSeats(6)">6</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Deposit Info -->
+            <div class="deposit-info" id="deposit-info">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-shield-halved text-pink-400 mt-0.5"></i>
+                    <div>
+                        <div class="font-bold text-pink-300 mb-1">Security Deposit Required</div>
+                        <div id="deposit-amount-text">A 10% security deposit will be charged when you publish. This ensures you show up for passengers.</div>
+                        <div id="deposit-calc" class="font-black text-white mt-1 text-base"></div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-pub" id="publishBtn" onclick="publishRide()">
+                <i class="fa-solid fa-lock mr-2"></i> Pay Deposit & Publish
+            </button>
+        </div>
+
+        <!-- MAP COLUMN -->
+        <div class="card p-4">
+            <h2 class="font-bold mb-2 flex items-center gap-2 text-sm uppercase tracking-wide text-gray-400">
+                <i class="fa-solid fa-map-location-dot text-violet-500"></i> Route Preview
+            </h2>
+            <p class="tip"><i class="fa-solid fa-hand-pointer mr-1"></i> Click on map to pin the focused field. Use "Pin Map" button to drop a stop on the map.</p>
+            <div id="map"></div>
+            <div class="flex gap-4 mt-3 text-xs text-gray-500 justify-center">
+                <span><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Start</span>
+                <span><span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>Stops</span>
+                <span><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span>End</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyCd_ydWcFyr8sEmnzF9hQPobLkFMXkeyso",
+    authDomain: "ridex-74948.firebaseapp.com",
+    projectId: "ridex-74948",
+    storageBucket: "ridex-74948.firebasestorage.app",
+    messagingSenderId: "722829487082",
+    appId: "1:722829487082:web:c80538bcd04601fc3d2093"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ── Map Init ──────────────────────────────────────────────
+const map = L.map('map').setView([20.5937, 78.9629], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
+
+let fromPlace = null, toPlace = null;
+let stops = []; // [{address, lat, lng, area, pincode}]
+let stopMarkers = [];
+let fromMarker, toMarker;
+let routeLines = [];
+let activeField = 'from';
+let selectedSeats = 2;
+let pinningStop = false; // True when user clicked "Pin Map" for a stop
+
+function setActive(field) {
+    activeField = field;
+    if (field !== 'stop') {
+        pinningStop = false;
+        document.getElementById('mapPinHint').classList.remove('show');
+        document.getElementById('pinStopBtn')?.classList.remove('active');
+    }
+}
+
+// ── Map Click ─────────────────────────────────────────────
+map.on('click', async (e) => {
+    const { lat, lng } = e.latlng;
+
+    let address = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+            headers: { 'User-Agent': 'RIDEX-App/1.0' }
+        });
+        const data = await res.json();
+        address = data.display_name || address;
+    } catch(e) {}
+
+    if (activeField === 'from') {
+        document.getElementById('from-input').value = address;
+        fromPlace = { lat, lng, address };
+        if (fromMarker) map.removeLayer(fromMarker);
+        fromMarker = L.circleMarker([lat, lng], { radius: 8, color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map).bindPopup('📍 Start');
+        drawRoute();
+
+    } else if (activeField === 'to') {
+        document.getElementById('to-input').value = address;
+        toPlace = { lat, lng, address };
+        if (toMarker) map.removeLayer(toMarker);
+        toMarker = L.circleMarker([lat, lng], { radius: 8, color: '#10b981', fillColor: '#10b981', fillOpacity: 1 }).addTo(map).bindPopup('🏁 End');
+        drawRoute();
+
+    } else if (activeField === 'stop' || pinningStop) {
+        document.getElementById('stop-text-input').value = address;
+        window._pendingStopCoords = { lat, lng, address };
+        pinningStop = false;
+        document.getElementById('mapPinHint').classList.remove('show');
+        document.getElementById('pinStopBtn')?.classList.remove('active');
+
+        // Show temporary preview marker
+        const tmpMarker = L.circleMarker([lat, lng], { radius: 7, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.7 }).addTo(map).bindPopup('📌 Stop (confirm to add)').openPopup();
+        window._tmpStopMarker = tmpMarker;
+    }
+});
+
+// ── Map Pin Button for Stop ───────────────────────────────
+function activateMapPin() {
+    pinningStop = true;
+    activeField = 'stop';
+    document.getElementById('mapPinHint').classList.add('show');
+    document.getElementById('pinStopBtn').classList.add('active');
+}
+
+// ── Show/Hide Stop Add Section ────────────────────────────
+function showStopAdd() {
+    const section = document.getElementById('stop-add-section');
+    section.style.display = 'block';
+    window._pendingStopCoords = null;
+    if (window._tmpStopMarker) { map.removeLayer(window._tmpStopMarker); window._tmpStopMarker = null; }
+    document.getElementById('stop-text-input').value = '';
+    document.getElementById('stop-ac').style.display = 'none';
+    document.getElementById('mapPinHint').classList.remove('show');
+    setActive('stop');
+    document.getElementById('stop-text-input').focus();
+}
+
+function cancelStopAdd() {
+    document.getElementById('stop-add-section').style.display = 'none';
+    window._pendingStopCoords = null;
+    pinningStop = false;
+    if (window._tmpStopMarker) { map.removeLayer(window._tmpStopMarker); window._tmpStopMarker = null; }
+    setActive('from');
+}
+
+function confirmStopAdd() {
+    const text = document.getElementById('stop-text-input').value.trim();
+    if (!text) { alert('Please enter a stop name or address.'); return; }
+
+    const coords = window._pendingStopCoords;
+    const stop = coords
+        ? { address: text || coords.address, lat: coords.lat, lng: coords.lng }
+        : { address: text, lat: null, lng: null }; // text-only stop
+
+    stops.push(stop);
+
+    // Remove tmp marker, add real one if coords exist
+    if (window._tmpStopMarker) { map.removeLayer(window._tmpStopMarker); window._tmpStopMarker = null; }
+    if (stop.lat && stop.lng) {
+        const m = L.circleMarker([stop.lat, stop.lng], {
+            radius: 7, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 1
+        }).addTo(map).bindPopup(`📌 Stop ${stops.length}: ${stop.address}`);
+        stopMarkers.push(m);
+    } else {
+        stopMarkers.push(null); // text-only, no marker
+    }
+
+    renderStops();
+    drawRoute();
+    cancelStopAdd();
+}
+
+// ── Stop Text Autocomplete (Nominatim) ───────────────────
+let stopAcTimer;
+async function onStopTextInput() {
+    clearTimeout(stopAcTimer);
+    const val = document.getElementById('stop-text-input').value.trim();
+    const acList = document.getElementById('stop-ac');
+    if (val.length < 3) { acList.style.display = 'none'; return; }
+
+    stopAcTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5&countrycodes=in`, {
+                headers: { 'User-Agent': 'RIDEX-App/1.0' }
+            });
+            const data = await res.json();
+            acList.innerHTML = '';
+            if (data.length === 0) { acList.style.display = 'none'; return; }
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'stop-ac-item';
+                div.innerHTML = `<i class="fa-solid fa-map-pin text-red-400 text-xs"></i><span>${item.display_name}</span>`;
+                div.onclick = () => {
+                    document.getElementById('stop-text-input').value = item.display_name;
+                    window._pendingStopCoords = { lat: parseFloat(item.lat), lng: parseFloat(item.lon), address: item.display_name };
+                    acList.style.display = 'none';
+                    // Preview marker
+                    if (window._tmpStopMarker) map.removeLayer(window._tmpStopMarker);
+                    window._tmpStopMarker = L.circleMarker([item.lat, item.lon], { radius: 7, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.7 }).addTo(map).bindPopup('📌 Stop preview').openPopup();
+                    map.setView([item.lat, item.lon], 13);
+                };
+                acList.appendChild(div);
+            });
+            acList.style.display = 'block';
+        } catch(e) { acList.style.display = 'none'; }
+    }, 400);
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#stop-add-section')) {
+        document.getElementById('stop-ac').style.display = 'none';
+    }
+});
+
+// ── Render Stops List ─────────────────────────────────────
+function renderStops() {
+    document.getElementById('stops-list').innerHTML = stops.map((s, i) => `
+        <div class="stop-row">
+            <div class="stop-num">${i + 1}</div>
+            <div style="flex:1;min-width:0">
+                <div style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.address}</div>
+                <div style="font-size:0.72rem;color:#6b7280">${s.lat ? `📍 ${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}` : '🔤 Text only'}</div>
+            </div>
+            <button class="stop-del" onclick="removeStop(${i})"><i class="fa-solid fa-times" style="font-size:10px"></i></button>
+        </div>`).join('');
+}
+
+function removeStop(i) {
+    if (stopMarkers[i]) map.removeLayer(stopMarkers[i]);
+    stops.splice(i, 1);
+    stopMarkers.splice(i, 1);
+    renderStops();
+    drawRoute();
+}
+
+// ── Draw Route ────────────────────────────────────────────
+async function drawRoute() {
+    if (!fromPlace || !toPlace) return;
+
+    // Only use stops that have coordinates
+    const coordStops = stops.filter(s => s.lat && s.lng);
+    const points = [
+        [fromPlace.lng, fromPlace.lat],
+        ...coordStops.map(s => [s.lng, s.lat]),
+        [toPlace.lng, toPlace.lat]
+    ];
+
+    try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${points.map(p => p.join(',')).join(';')}?overview=full&geometries=geojson&alternatives=true`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!data.routes) return;
+
+        routeLines.forEach(r => map.removeLayer(r));
+        routeLines = [];
+
+        data.routes.forEach((route, idx) => {
+            const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+            const line = L.polyline(coords, {
+                color: idx === 0 ? '#8b5cf6' : '#444',
+                weight: idx === 0 ? 5 : 3,
+                opacity: idx === 0 ? 0.9 : 0.5
+            }).addTo(map);
+            routeLines.push(line);
+        });
+
+        map.fitBounds(routeLines[0].getBounds(), { padding: [30, 30] });
+    } catch(e) {}
+}
+
+// ── Nominatim Autocomplete for From/To ───────────────────
+function setupNominatimAC(inputId, onSelect) {
+    const input = document.getElementById(inputId);
+    let timer, dropdown;
+
+    // Create dropdown
+    dropdown = document.createElement('div');
+    dropdown.className = 'stop-ac-list';
+    dropdown.style.zIndex = '400';
+    input.parentElement.style.position = 'relative';
+    input.parentElement.appendChild(dropdown);
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const val = input.value.trim();
+        if (val.length < 3) { dropdown.style.display = 'none'; return; }
+        timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5&countrycodes=in`, {
+                    headers: { 'User-Agent': 'RIDEX-App/1.0' }
+                });
+                const data = await res.json();
+                dropdown.innerHTML = '';
+                if (!data.length) { dropdown.style.display = 'none'; return; }
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'stop-ac-item';
+                    div.innerHTML = `<i class="fa-solid fa-location-dot text-violet-400 text-xs"></i><span style="font-size:0.82rem">${item.display_name}</span>`;
+                    div.onclick = () => {
+                        input.value = item.display_name;
+                        dropdown.style.display = 'none';
+                        onSelect({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), address: item.display_name });
+                    };
+                    dropdown.appendChild(div);
+                });
+                dropdown.style.display = 'block';
+            } catch(e) { dropdown.style.display = 'none'; }
+        }, 400);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
+    });
+}
+
+setupNominatimAC('from-input', (place) => {
+    fromPlace = place;
+    if (fromMarker) map.removeLayer(fromMarker);
+    fromMarker = L.circleMarker([place.lat, place.lng], { radius: 8, color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 1 }).addTo(map).bindPopup('📍 Start');
+    map.setView([place.lat, place.lng], 12);
+    drawRoute();
+});
+
+setupNominatimAC('to-input', (place) => {
+    toPlace = place;
+    if (toMarker) map.removeLayer(toMarker);
+    toMarker = L.circleMarker([place.lat, place.lng], { radius: 8, color: '#10b981', fillColor: '#10b981', fillOpacity: 1 }).addTo(map).bindPopup('🏁 End');
+    map.setView([place.lat, place.lng], 12);
+    drawRoute();
+});
+
+// ── Seat Picker ───────────────────────────────────────────
+function selectSeats(n) {
+    selectedSeats = n;
+    document.querySelectorAll('.seat-b').forEach((b, i) => b.classList.toggle('on', i + 1 === n));
+    updateDepositInfo();
+}
+
+// ── Deposit Calculator ────────────────────────────────────
+function updateDepositInfo() {
+    const price = parseFloat(document.getElementById('ride-price').value) || 0;
+    const courierEnabled = document.getElementById('courier-toggle').value === 'yes';
+    const courierFee = courierEnabled ? (parseFloat(document.getElementById('courier-fee').value) || 0) : 0;
+    const serviceType = document.getElementById('ride-type').value;
+
+    let baseAmount = 0;
+    let calcText = '';
+
+    if (serviceType === 'courier') {
+        // Courier-only ride: deposit on courier fee
+        baseAmount = courierFee;
+        const deposit = (courierFee * 0.1).toFixed(2);
+        calcText = courierFee > 0 ? `Deposit: ₹${deposit} (10% of courier fee ₹${courierFee})` : '';
+    } else {
+        // Regular ride: deposit on seat price × seats
+        const rideTotal = price * selectedSeats;
+        // Include courier fee in deposit base if courier accepted
+        const depositBase = rideTotal + courierFee;
+        const deposit = (depositBase * 0.1).toFixed(2);
+        if (price > 0 || courierFee > 0) {
+            const parts = [];
+            if (price > 0) parts.push(`₹${price} × ${selectedSeats} seats`);
+            if (courierFee > 0) parts.push(`₹${courierFee} courier fee`);
+            calcText = `Deposit: ₹${deposit} (10% of ${parts.join(' + ')})`;
+        }
+    }
+
+    document.getElementById('deposit-calc').textContent = calcText;
+}
+
+function toggleCourierFee() {
+    const val = document.getElementById('courier-toggle').value;
+    document.getElementById('courier-fee-box').style.display = val === 'yes' ? 'block' : 'none';
+    updateDepositInfo();
+}
+
+document.getElementById('ride-type').addEventListener('change', updateDepositInfo);
+document.getElementById('courier-fee').addEventListener('input', updateDepositInfo);
+
+// ── Publish → Redirect to Payment ────────────────────────
+async function publishRide() {
+    const user = auth.currentUser;
+
+    if (!user) {
+        alert('Please login first.');
+        window.location.href = 'log.html';
+        return;
+    }
+
+    if (!fromPlace) { alert('Please set your starting point.'); return; }
+    if (!toPlace) { alert('Please set your destination.'); return; }
+
+    const date = document.getElementById('ride-date').value;
+    const time = document.getElementById('ride-time').value;
+    const price = parseFloat(document.getElementById('ride-price').value) || 0;
+
+    if (!date) { alert('Please select a date.'); return; }
+    if (!time) { alert('Please select departure time.'); return; }
+
+    // Calculate 10% security deposit (ride price + courier fee if enabled)
+    const serviceType = document.getElementById('ride-type').value;
+    const courierEnabled = document.getElementById('courier-toggle').value === 'yes';
+    const courierFee = courierEnabled ? (parseFloat(document.getElementById('courier-fee').value) || 0) : 0;
+
+    let depositBase = 0;
+    if (serviceType === 'courier') {
+        depositBase = courierFee;
+    } else {
+        depositBase = price * selectedSeats + courierFee;
+    }
+    const deposit = parseFloat((depositBase * 0.1).toFixed(2));
+
+    // Prepare ride data to store after payment
+    const rideData = {
+        publisherId: user.uid,
+        publisherName: user.displayName || 'RIDEX User',
+        publisherEmail: user.email || '',
+
+        from: document.getElementById('from-input').value,
+        fromLat: fromPlace.lat,
+        fromLng: fromPlace.lng,
+
+        to: document.getElementById('to-input').value,
+        toLat: toPlace.lat,
+        toLng: toPlace.lng,
+
+        // Full stops with coordinates for map display
+        stops: stops.map(s => s.address),
+        stopsData: stops.map(s => ({ address: s.address, lat: s.lat || null, lng: s.lng || null })),
+
+        date,
+        time,
+        price,
+        seats: serviceType === 'courier' ? 0 : selectedSeats,
+        serviceType,
+        courierAccepted: courierEnabled,
+        courierFee: courierEnabled ? courierFee : 0,
+
+        status: 'active',
+        depositPaid: true
+    };
+
+    // Encode ride data and redirect to payment
+    const encoded = encodeURIComponent(JSON.stringify(rideData));
+    const depositAmt = deposit > 0 ? deposit : 1; // min ₹1 if free ride
+    window.location.href = `payment.html?amount=${depositAmt}&type=publish&ride=${encoded}&purpose=Security+Deposit+for+Ride+Publishing`;
+}
+
+// ── Focus tracking ────────────────────────────────────────
+document.getElementById('from-input').addEventListener('focus', () => setActive('from'));
+document.getElementById('to-input').addEventListener('focus', () => setActive('to'));
+</script>
+</body>
+</html>

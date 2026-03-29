@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find a Ride - RIDEX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg-dark: #0a0a0c;
+            --card-bg: #151518;
+            --brand-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            --accent: #8b5cf6;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .glass-nav {
+            background: rgba(10, 10, 12, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .search-container {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .search-input-group {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 12px 16px;
+        }
+
+        input, select {
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            width: 100%;
+        }
+
+        select option {
+            background: #16161a;
+            color: white;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .ride-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ride-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .price-tag {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: #d8b4fe;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-weight: 800;
+        }
+
+        .custom-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: #16161a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .passenger-block {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .passenger-input-styled {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="glass-nav fixed top-0 w-full z-50 px-6 py-4 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center font-bold text-white">R</div>
+            <span class="text-xl font-bold tracking-tight text-white">RIDEX</span>
+        </a>
+        <div class="flex items-center gap-6">
+            <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">Home</a>
+            <a href="publish.html" class="text-sm text-gray-400 hover:text-white transition-colors">Publish</a>
+            <a href="profile.html">
+                <div class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center border border-white/10">
+                    <i class="fa-solid fa-user text-xs"></i>
+                </div>
+            </a>
+        </div>
+    </nav>
+
+    <main class="pt-28 pb-20 px-6 max-w-5xl mx-auto">
+        <section class="mb-8">
+            <div class="search-container">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="search-input-group">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">From</label>
+                        <input type="text" id="search-from" placeholder="Origin" class="font-bold search-field">
+                    </div>
+                    <div class="search-input-group">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">To</label>
+                        <input type="text" id="search-to" placeholder="Destination" class="font-bold search-field">
+                    </div>
+                    <div class="search-input-group">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Date</label>
+                        <input type="date" id="search-date" class="font-bold search-field">
+                    </div>
+                    <button id="find-btn" class="bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl py-4 transition-all">
+                        Find Journey
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <div class="flex flex-wrap gap-3 mb-10 items-center">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mr-2">Filter:</span>
+            <button class="filter-btn active" data-type="all">
+                <i class="fa-solid fa-border-all"></i> All
+            </button>
+            <button class="filter-btn" data-type="Car">
+                <i class="fa-solid fa-car"></i> Cars
+            </button>
+            <button class="filter-btn" data-type="Bike">
+                <i class="fa-solid fa-motorcycle"></i> Bikes
+            </button>
+            <button class="filter-btn" data-type="Courier">
+                <i class="fa-solid fa-box"></i> Couriers
+            </button>
+        </div>
+
+        <h2 class="text-xl font-bold mb-6" id="results-heading">Available Rides</h2>
+        
+        <div id="rides-container" class="space-y-4">
+            <div class="p-12 text-center text-gray-500">
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i>
+            </div>
+        </div>
+    </main>
+
+    <!-- Login Required Modal -->
+    <div id="login-modal" class="custom-modal">
+        <div class="modal-content text-center">
+            <div class="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-lock text-amber-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Login Required</h3>
+            <p class="text-gray-400 text-sm mb-6">Please login to continue with your booking.</p>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('login-modal').style.display='none'" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">Close</button>
+                <a href="log.html" class="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 font-bold transition-all inline-block">Login Now</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 1: Seat Selection Modal -->
+    <div id="seat-modal" class="custom-modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-couch text-violet-500"></i> How many seats?
+            </h3>
+            <div class="mb-6">
+                <label class="text-xs text-gray-400 font-bold uppercase block mb-2">Select Seats</label>
+                <div class="search-input-group">
+                    <select id="passenger-count" class="font-bold">
+                        <!-- Options generated by JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('seat-modal').style.display='none'" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">Cancel</button>
+                <button id="next-to-details" class="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 font-bold transition-all">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Passenger Details Modal -->
+    <div id="passenger-modal" class="custom-modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-users text-violet-500"></i> Passenger Details
+            </h3>
+            
+            <div id="passenger-list" class="space-y-4 mb-6">
+                <!-- Inputs generated by JS -->
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="backToSeats()" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">Back</button>
+                <button id="next-to-payment" class="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 font-bold transition-all">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Payment Confirmation Modal -->
+    <div id="payment-modal" class="custom-modal">
+        <div class="modal-content text-center">
+            <div class="w-16 h-16 bg-violet-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-credit-card text-violet-500 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Confirm Payment</h3>
+            <div class="bg-white/5 p-4 rounded-2xl mb-6 text-left border border-white/5">
+                <p class="text-gray-400 text-xs uppercase font-bold mb-2">Summary</p>
+                <p class="text-sm mb-1" id="payment-summary-route"></p>
+                <p class="text-sm font-bold text-violet-400" id="payment-summary-total"></p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button id="cancel-payment" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">Back</button>
+                <button id="confirm-payment" class="flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 font-bold transition-all">Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp,doc,
+updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCd_ydWcFyr8sEmnzF9hQPobLkFMXkeyso",
+            authDomain: "ridex-74948.firebaseapp.com",
+            projectId: "ridex-74948",
+            storageBucket: "ridex-74948.firebasestorage.app",
+            messagingSenderId: "722829487082",
+            appId: "1:722829487082:web:c80538bcd04601fc3d2093"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let currentUser = null;
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (!user) signInAnonymously(auth);
+        });
+        
+
+        const container = document.getElementById("rides-container");
+        const filterBtns = document.querySelectorAll(".filter-btn");
+        const findBtn = document.getElementById("find-btn");
+        const searchFields = document.querySelectorAll(".search-field");
+        
+        const seatModal = document.getElementById("seat-modal");
+        const passengerModal = document.getElementById("passenger-modal");
+        const paymentModal = document.getElementById("payment-modal");
+        const loginModal = document.getElementById("login-modal");
+        
+        const passengerCountSelect = document.getElementById("passenger-count");
+        const passengerList = document.getElementById("passenger-list");
+        
+        let allRides = [];
+        let currentFilter = "all";
+        let selectedRide = null;
+        let selectedSeatsCount = 1;
+        let passengersData = [];
+
+        // Fetch Rides
+        onSnapshot(collection(db, "rides"), (snap) => {
+            allRides = [];
+            snap.forEach(doc => allRides.push({ id: doc.id, ...doc.data() }));
+            renderRides();
+        });
+
+        // 1. Search Logic with Enter support (Next Field Focus)
+        searchFields.forEach((field, index) => {
+            field.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    // If it's the last field (date), perform search
+                    if (index === searchFields.length - 1) {
+                        renderRides();
+                    } else {
+                        // Otherwise, focus on the next field
+                        searchFields[index + 1].focus();
+                    }
+                }
+            });
+        });
+        findBtn.addEventListener("click", renderRides);
+
+        // Initiate Booking
+        window.initiateBooking = (rideId) => {
+            if (!currentUser || currentUser.isAnonymous) {
+                loginModal.style.display = "flex";
+                return;
+            }
+            selectedRide = allRides.find(r => r.id === rideId);
+            if (!selectedRide) return;
+            const max = parseInt(selectedRide.seats) || 4;
+            passengerCountSelect.innerHTML = "";
+            for(let i=1; i<=max; i++) passengerCountSelect.innerHTML += `<option value="${i}">${i} Passenger${i>1?'s':''}</option>`;
+            seatModal.style.display = "flex";
+        };
+
+        // 2. From Seats to Details
+        const proceedToDetails = () => {
+            selectedSeatsCount = parseInt(passengerCountSelect.value);
+            passengerList.innerHTML = "";
+            for (let i = 1; i <= selectedSeatsCount; i++) {
+                passengerList.innerHTML += `
+                    <div class="passenger-block">
+                        <p class="text-[10px] text-violet-400 font-bold uppercase mb-3">Passenger ${i}</p>
+                        <div class="space-y-3">
+                            <input type="text" class="passenger-input-styled p-name w-full" placeholder="Full Name" required>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="number" class="passenger-input-styled p-age" placeholder="Age" min="1" max="100" required>
+                                <select class="passenger-input-styled p-gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            seatModal.style.display = "none";
+            passengerModal.style.display = "flex";
+            
+            // Add Enter Key listener to new inputs for "Next Field" behavior
+            setTimeout(() => {
+                const inputs = Array.from(passengerModal.querySelectorAll('input, select'));
+                inputs.forEach((input, index) => {
+                    input.addEventListener('keypress', (e) => {
+                        if(e.key === 'Enter') {
+                            e.preventDefault();
+                            if (index === inputs.length - 1) {
+                                proceedToPayment();
+                            } else {
+                                inputs[index + 1].focus();
+                            }
+                        }
+                    });
+                });
+            }, 100);
+        };
+        document.getElementById("next-to-details").onclick = proceedToDetails;
+        passengerCountSelect.addEventListener('keypress', (e) => { if(e.key === 'Enter') proceedToDetails(); });
+
+        window.backToSeats = () => {
+            passengerModal.style.display = "none";
+            seatModal.style.display = "flex";
+        };
+
+        // 3. From Details to Payment Summary
+        const proceedToPayment = () => {
+            const nameInputs = document.querySelectorAll(".p-name");
+            const ageInputs = document.querySelectorAll(".p-age");
+            const genderInputs = document.querySelectorAll(".p-gender");
+            passengersData = [];
+            let isValid = true;
+            nameInputs.forEach((input, index) => {
+                const name = input.value.trim();
+                const age = ageInputs[index].value;
+                const gender = genderInputs[index].value;
+                if (!name || !age) isValid = false;
+                else passengersData.push({ name, age, gender });
+            });
+            if (!isValid) {
+                alert("Dayachesi anni details fill cheyandi!");
+                return;
+            }
+            const totalPrice = selectedRide.price * selectedSeatsCount;
+            document.getElementById("payment-summary-route").innerText = `${selectedRide.from} to ${selectedRide.to} (${selectedSeatsCount} Seats)`;
+            document.getElementById("payment-summary-total").innerText = `Total Amount: ₹${totalPrice}`;
+            passengerModal.style.display = "none";
+            paymentModal.style.display = "flex";
+        };
+        document.getElementById("next-to-payment").onclick = proceedToPayment;
+
+        document.getElementById("cancel-payment").onclick = () => {
+            paymentModal.style.display = "none";
+            passengerModal.style.display = "flex";
+        };
+
+        // Final Pay Action
+ document.getElementById("confirm-payment").onclick = async () => {
+
+const btn = document.getElementById("confirm-payment");
+btn.disabled = true;
+btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Redirecting...';
+
+const bookingId = "RIDEX" + Date.now();
+const totalAmount = selectedRide.price * selectedSeatsCount;
+const rideId = selectedRide.id;
+
+localStorage.setItem("currentBooking", JSON.stringify({
+    bookingId,
+    rideId,
+    amount: totalAmount,
+    seats: selectedSeatsCount,
+    passengers: passengersData,
+    rideFrom: selectedRide.from,
+    rideTo: selectedRide.to,
+    date: selectedRide.date,
+    time: selectedRide.time
+}));
+
+const bookingData = {
+    bookingId,
+    rideId,
+    from: selectedRide.from,
+    to: selectedRide.to,
+    date: selectedRide.date,
+    time: selectedRide.time,
+    seats: selectedSeatsCount,
+    passengers: passengersData
+};
+
+window.location.href =
+`payment.html?type=book&amount=${totalAmount}&booking=${encodeURIComponent(JSON.stringify(bookingData))}`;
+};
+        // Filtering Logic
+        filterBtns.forEach(btn => {
+            btn.onclick = () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.type.toLowerCase();
+                renderRides();
+            };
+        });
+
+        function renderRides() {
+            const fIn = document.getElementById("search-from").value.trim().toLowerCase();
+            const tIn = document.getElementById("search-to").value.trim().toLowerCase();
+            const dIn = document.getElementById("search-date").value;
+            const filtered = allRides.filter(ride => {
+
+    // ❌ hide own rides
+    if(currentUser && ride.publisherId === currentUser.uid){
+        return false;
+    }
+
+    const rF = ride.from?.toLowerCase() || "";
+    const rT = ride.to?.toLowerCase() || "";
+    const rTy = ride.serviceType?.toLowerCase().trim() || "";
+
+    const matchesSearch =
+        (fIn === "" || rF.includes(fIn)) &&
+        (tIn === "" || rT.includes(tIn)) &&
+        (dIn === "" || ride.date === dIn);
+
+    const matchesFilter =
+        (currentFilter === "all" || rTy === currentFilter);
+
+    return matchesSearch && matchesFilter;
+});
+            container.innerHTML = filtered.length ? "" : '<div class="p-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10 text-gray-500">Rides levvu babai.</div>';
+            filtered.forEach(ride => {
+                const icon = ride.serviceType?.toLowerCase() === "bike" ? "fa-motorcycle" : ride.serviceType?.toLowerCase() === "courier" ? "fa-box" : "fa-car";
+                container.innerHTML += `
+                    <div class="ride-card">
+                        <div class="flex flex-col md:flex-row justify-between gap-6">
+                            <div class="flex-1">
+                                <h3 class="font-bold text-lg mb-2">${ride.from} <i class="fa-solid fa-arrow-right-long text-xs mx-2 opacity-30"></i> ${ride.to}</h3>
+                                <div class="flex gap-4 mb-4 text-xs text-gray-400">
+                                    <span><i class="fa-solid fa-calendar mr-1"></i> ${ride.date}</span>
+                                    <span><i class="fa-solid fa-clock mr-1"></i> ${ride.time}</span>
+                                </div>
+                                <div class="flex items-center gap-4 text-sm text-gray-500">
+                                    <span class="capitalize"><i class="fa-solid ${icon} mr-2"></i> ${ride.serviceType}</span>
+                                  <span class="text-emerald-500">
+<i class="fa-solid fa-check-circle mr-1"></i> 
+${ride.seats} seat${ride.seats > 1 ? 's' : ''} left
+</span>
+                                </div>
+                            </div>
+                            <div class="md:w-44 flex flex-col items-end justify-between border-t md:border-t-0 md:border-l border-white/5 pt-4 md:pt-0 md:pl-6">
+                                <div class="text-right mb-4">
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold">Per Seat</p>
+                                    <span class="price-tag text-lg">₹${ride.price}</span>
+                                </div>
+                                <button onclick="initiateBooking('${ride.id}')" class="w-full bg-white text-black font-bold py-2 rounded-xl hover:bg-gray-200 transition-all text-sm">
+                                    Book Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+    
+</body>
+</html>
