@@ -11,23 +11,18 @@ const razorpay = new Razorpay({
     key_secret: "dKw0wFt2npFAwy68yBfogH2a"
 });
 
-// Create Order API
 app.post("/create-order", async (req, res) => {
+    const options = {
+        amount: req.body.amount * 100,
+        currency: "INR",
+        receipt: "receipt_order_1"
+    };
+
     try {
-        const { amount } = req.body;
-
-        const options = {
-            amount: amount * 100, // paise
-            currency: "INR",
-            receipt: "order_rcptid_" + Date.now()
-        };
-
         const order = await razorpay.orders.create(options);
-
         res.json(order);
-
     } catch (err) {
-        res.status(500).send(err);
+        res.status(500).send("Error creating order");
     }
 });
 
